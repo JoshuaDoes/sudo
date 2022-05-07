@@ -1,0 +1,10 @@
+# Output executables
+*.exe
+*.app
+*.old
+
+# Log files
+*.log
+
+# OS leftovers
+desktop.ini
