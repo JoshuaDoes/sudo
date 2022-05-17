@@ -51,9 +51,12 @@ func NewMsgIn(data []byte) (msgs []*Msg, err error) {
 		msg := &Msg{}
 		err = json.Unmarshal(dataBuf, msg)
 		if err != nil {
-			jsonBuf = dataBuf
-			err = nil //We're expecting more data still...
-			continue
+			if i == len(msgsSplit)-1 {
+				jsonBuf = dataBuf
+				err = nil //We're expecting more data still...
+				continue
+			}
+			return
 		}
 
 		msgs = append(msgs, msg)
