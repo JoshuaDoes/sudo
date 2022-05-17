@@ -3,19 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
+	"time"
 )
 
 var (
 	msgEOF *Msg = &Msg{Op: opEOF}
 
 	argIndex = 0
+	port int64 = 0
 	bufSize int64 = 65536
 	buffer int64 = 65536
 	version bool = false
 	check bool = false
 	debug bool = false
+	isClient bool = false
 )
 
 func init() {
@@ -23,6 +27,8 @@ func init() {
 	flag.BoolVar(&version, "version", version, "Set to display version info and exit")
 	flag.BoolVar(&check, "check", check, "Set to check for admin privileges and exit")
 	flag.BoolVar(&debug, "debug", debug, "Set to enable debug logging")
+	flag.BoolVar(&isClient, "client", isClient, "Set to act as client")
+	flag.Int64Var(&port, "port", port, "Custom TCP port for session (0 for randomization)")
 	flag.Parse()
 
 	bufSize = buffer - int64(len(msgEOF.Bytes())) //Ensure the size of a msg is accounted for
@@ -34,11 +40,18 @@ func main() {
 		return
 	}
 
+	if port <= 0 {
+		port = rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(65536)
+	}
+
 	for i := 1; i < len(os.Args); i++ {
 		if os.Args[i][0] == '-' {
 			continue
 		}
 		if os.Args[i] == fmt.Sprintf("%d", buffer) {
+			continue
+		}
+		if os.Args[i] == fmt.Sprintf("%d", port) {
 			continue
 		}
 		argIndex = i
@@ -58,6 +71,7 @@ func main() {
 		fmt.Println("buffer:", buffer)
 		fmt.Println("bufSize:", bufSize)
 		fmt.Println("debug:", debug)
+		fmt.Println("port:", port)
 		return
 	}
 
@@ -67,7 +81,7 @@ func main() {
 		return
 	}
 
-	if isAdmin() {
+	if isClient {
 		spawnClient()
 		return
 	}

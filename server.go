@@ -13,7 +13,7 @@ import (
 )
 
 func spawnServer() {
-	srv, err := net.Listen("tcp", "127.0.0.1:4488")
+	srv, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		fmt.Println("sudo: error: unable to spawn server")
 		return
@@ -23,7 +23,10 @@ func spawnServer() {
 	verb := "runas"
 	exe, _ := os.Executable()
 	cwd, _ := os.Getwd()
-	args := strings.Join(os.Args[1:], " ")
+	args := "-client " + strings.Join(os.Args[1:], " ")
+	if !strings.Contains(args, fmt.Sprintf("%d", port)) {
+		args = fmt.Sprintf("-port %d %s", port, args)
+	}
 
 	verbPtr, _ := syscall.UTF16PtrFromString(verb)
 	exePtr, _ := syscall.UTF16PtrFromString(exe)
