@@ -57,55 +57,49 @@ func spawnServer() {
 	go readOutput(output, conn)
 
 	for {
-		finished := false
 		select {
 		case o, ok := <-output:
 			if !ok {
-				finished = true
-				break
+				return
 			}
 
-			msg, err := NewMsgIn(o)
+			msgs, err := NewMsgIn(o)
 			if err != nil {
-				fmt.Println("sudo: error: unable to process msg:", err)
+				fmt.Println("sudo: error: unable to process msgs:", err)
+				fmt.Println(string(o))
 			}
-			switch msg.Op {
-			case opError:
-				finished = true
-				fmt.Printf("sudo: error: %s\n", string(msg.Data))
-			case opEOF:
-				finished = true
-				break
-			case opStdout:
-				os.Stdout.Write(msg.Data)
-			case opStderr:
-				os.Stderr.Write(msg.Data)
-			case opDebug:
-				if debug {
-					fmt.Printf("sudo: debug: %s\n", string(msg.Data))
+			for i := 0; i < len(msgs); i++ {
+				msg := msgs[i]
+				switch msg.Op {
+				case opError:
+					fmt.Printf("sudo: error: %s\n", string(msg.Data))
+				case opEOF:
+					return
+				case opStdout:
+					os.Stdout.Write(msg.Data)
+				case opStderr:
+					os.Stderr.Write(msg.Data)
+				case opDebug:
+					if debug {
+						fmt.Printf("sudo: debug: %s\n", string(msg.Data))
+					}
+				default:
+					fmt.Printf("sudo: error: unknown op: %d\n", msg.Op)
 				}
-			default:
-				fmt.Printf("sudo: error: unknown op: %d\n", msg.Op)
 			}
 		case i, ok := <-input:
 			if !ok {
-				finished = true
-				break
+				return
 			}
 
 			i = NewMsg(opStdin, i).Bytes()
 			conn.Write(i)
 		case _, ok := <-sc:
 			if ok {
-				//fmt.Println("TERMINATED!")
-				finished = true
-				break
+				return
 			}
 		default:
 			time.Sleep(time.Millisecond * 1)
-		}
-		if finished {
-			break
 		}
 	}
 }
@@ -128,7 +122,7 @@ func readInput(input chan []byte) {
 }
 func readOutput(output chan []byte, conn net.Conn) {
 	for {
-		out := make([]byte, bufSize)
+		out := make([]byte, buffer)
 
 		n, err := conn.Read(out)
 		if err != nil {

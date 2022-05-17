@@ -11,18 +11,21 @@ var (
 	msgEOF *Msg = &Msg{Op: opEOF}
 
 	argIndex = 0
-	bufSize int = 65536
+	bufSize int64 = 65536
+	buffer int64 = 65536
 	version bool = false
 	check bool = false
 	debug bool = false
 )
 
 func init() {
-	flag.IntVar(&bufSize, "buffer", bufSize, "Set size of all byte buffers")
+	flag.Int64Var(&buffer, "buffer", buffer, "Set max size of all byte buffers")
 	flag.BoolVar(&version, "version", version, "Set to display version info and exit")
 	flag.BoolVar(&check, "check", check, "Set to check for admin privileges and exit")
 	flag.BoolVar(&debug, "debug", debug, "Set to enable debug logging")
 	flag.Parse()
+
+	bufSize = buffer - int64(len(msgEOF.Bytes())) //Ensure the size of a msg is accounted for
 }
 
 func main() {
@@ -31,20 +34,11 @@ func main() {
 		return
 	}
 
-	if version {
-		fmt.Println("sudo for windows v0")
-		return
-	}
-	if check {
-		fmt.Println("isAdmin:", isAdmin())
-		return
-	}
-	if debug {
-		debug = true
-	}
-
 	for i := 1; i < len(os.Args); i++ {
 		if os.Args[i][0] == '-' {
+			continue
+		}
+		if os.Args[i] == fmt.Sprintf("%d", buffer) {
 			continue
 		}
 		argIndex = i
@@ -52,6 +46,19 @@ func main() {
 	}
 	if argIndex == 0 {
 		fmt.Println("sudo: error: must specify program")
+	}
+
+	if version {
+		fmt.Println("sudo for windows v0")
+		return
+	}
+	if check {
+		fmt.Println("argIndex:", argIndex)
+		fmt.Println("isAdmin:", isAdmin())
+		fmt.Println("buffer:", buffer)
+		fmt.Println("bufSize:", bufSize)
+		fmt.Println("debug:", debug)
+		return
 	}
 
 	_, err := exec.LookPath(os.Args[argIndex])
