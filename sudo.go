@@ -64,9 +64,6 @@ func main() {
 		argIndex = i
 		break
 	}
-	if argIndex == 0 {
-		fmt.Println("sudo: error: must specify program")
-	}
 
 	if version {
 		fmt.Println("sudo for windows v0")
@@ -80,6 +77,11 @@ func main() {
 		fmt.Println("debug:", debug)
 		fmt.Println("port:", port)
 		fmt.Println("log:", logFile)
+		return
+	}
+
+	if argIndex == 0 {
+		fmt.Println("sudo: error: must specify program")
 		return
 	}
 
