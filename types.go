@@ -66,10 +66,11 @@ func NewMsgIn(data []byte) (msgs []*Msg, err error) {
 }
 
 func NewMsg(op OpCmd, data []byte) *Msg {
+	logger.WriteString(fmt.Sprintf("[%d] %s\n", op, data))
 	return &Msg{Op: op, Data: data}
 }
 func NewMsgS(op OpCmd, data string) *Msg {
-	return &Msg{Op: op, Data: []byte(data)}
+	return NewMsg(op, []byte(data))
 }
 func NewMsgSF(op OpCmd, format string, data ...interface{}) *Msg {
 	return NewMsgS(op, fmt.Sprintf(format, data...))

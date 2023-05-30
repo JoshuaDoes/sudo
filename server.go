@@ -63,7 +63,7 @@ func spawnServer() {
 		select {
 		case o, ok := <-output:
 			if !ok {
-				return
+				continue
 			}
 
 			msgs, err := NewMsgIn(o)
@@ -92,7 +92,7 @@ func spawnServer() {
 			}
 		case i, ok := <-input:
 			if !ok {
-				return
+				continue
 			}
 
 			i = NewMsg(opStdin, i).Bytes()
@@ -113,7 +113,7 @@ func readInput(input chan []byte) {
 
 		n, err := os.Stdin.Read(in)
 		if err != nil {
-			//fmt.Printf("readInput: %v\n", err)
+			fmt.Printf("readInput: %v\n", err)
 			return
 		}
 
@@ -129,7 +129,7 @@ func readOutput(output chan []byte, conn net.Conn) {
 
 		n, err := conn.Read(out)
 		if err != nil {
-			//fmt.Printf("readOutput: %v\n", err)
+			fmt.Printf("readOutput: %v\n", err)
 			return
 		}
 

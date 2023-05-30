@@ -20,6 +20,9 @@ var (
 	check bool = false
 	debug bool = false
 	isClient bool = false
+
+	logFile string
+	logger *os.File
 )
 
 func init() {
@@ -29,6 +32,7 @@ func init() {
 	flag.BoolVar(&debug, "debug", debug, "Set to enable debug logging")
 	flag.BoolVar(&isClient, "client", isClient, "Set to act as client")
 	flag.Int64Var(&port, "port", port, "Custom TCP port for session (0 for randomization)")
+	flag.StringVar(&logFile, "log", logFile, "File to log packets to when debugging")
 	flag.Parse()
 
 	bufSize = buffer - int64(len(msgEOF.Bytes())) //Ensure the size of a msg is accounted for
@@ -54,6 +58,9 @@ func main() {
 		if os.Args[i] == fmt.Sprintf("%d", port) {
 			continue
 		}
+		if os.Args[i] == fmt.Sprintf("%s", logFile) {
+			continue
+		}
 		argIndex = i
 		break
 	}
@@ -72,6 +79,7 @@ func main() {
 		fmt.Println("bufSize:", bufSize)
 		fmt.Println("debug:", debug)
 		fmt.Println("port:", port)
+		fmt.Println("log:", logFile)
 		return
 	}
 
@@ -82,10 +90,18 @@ func main() {
 	}
 
 	if isClient {
+		if debug {
+			logger, err = os.OpenFile(logFile, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+			if err != nil {
+				fmt.Println("sudo: error: unable to open log file:", err)
+				return
+			}
+		}
 		spawnClient()
 		return
 	}
 
+	//fmt.Println(os.Args[argIndex:])
 	spawnServer()
 }
 

@@ -42,6 +42,7 @@ func (cli *Client) Close() {
 func spawnClient() {
 	cli, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
+		logger.WriteString(fmt.Sprintf("sudo: error: unable to connect to server: %v\n", err))
 		fmt.Println("sudo: error: unable to connect to server:", err)
 		return
 	}
@@ -87,7 +88,7 @@ func spawnClient() {
 	client.WriteMsg(NewMsgD("client: Spawning target process..."))
 	err = cmd.Start()
 	if err != nil {
-		client.WriteMsg(NewMsgEF("unable to spawn target process"))
+		client.WriteMsg(NewMsgEF("unable to spawn target process: %v", err))
 		return
 	}
 
@@ -107,6 +108,7 @@ func cmdReadOutput(cmdOut io.ReadCloser, client *Client) {
 		n, err := cmdOut.Read(buf)
 		if err != nil {
 			if err == io.EOF {
+				logger.WriteString("cmdReadOutput: EOF\n")
 				client.WriteMsg(msgEOF)
 			} else {
 				client.WriteMsg(NewMsgEF("cmdReadOutput: %v", err))
@@ -128,6 +130,7 @@ func cmdReadError(cmdErr io.ReadCloser, client *Client) {
 		n, err := cmdErr.Read(buf)
 		if err != nil {
 			if err == io.EOF {
+				logger.WriteString("cmdReadError: EOF\n")
 				client.WriteMsg(msgEOF)
 			} else {
 				client.WriteMsg(NewMsgEF("cmdReadError: %v", err))
